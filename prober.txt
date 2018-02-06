@@ -1,0 +1,68 @@
+#!/usr/bin/env python	
+import sys,easysnmp,time
+from easysnmp import Session
+command_line = sys.argv
+each_time = 1/float(command_line[2])
+ip , port ,communi = command_line[1].split(':')
+
+all_oids = []
+present = []
+past =[]
+#next =0
+for i in range(4,len(command_line)):
+	all_oids.append(command_line[i])
+all_oids.insert(0,'1.3.6.1.2.1.1.3.0')
+#print all_oids
+def zaahid():
+	global present,next
+	if each!=0:
+		print int(t1),"|",
+	session = Session(hostname=ip,remote_port = port, community='public', version=2,timeout = 1,retries = 1)
+	ans = session.get(all_oids)
+	past  = []
+	for select in range(1,len(ans)):
+		if ans[select].value!= 'NOSUCHOBJECT' and ans[select].value!='NOSUCHINSTANCE':
+			past.append(int(ans[select].value))
+		        
+			if each!= 0 and len(present)>0:
+				#print past,"|",present,"|"
+			
+				num=  int(past[select-1])-int(present[select-1])
+				den = round(t1-next,1)
+				rate = int(num/den)
+				if rate<0:
+					if ans[select].snmp_type =='past':
+						num = num+ 2**32
+						print int(num/den),"|",
+					elif ans[select].snmp_type =='COUNTER64':
+						num = num+ 2**64
+						print int(num/den),"|",
+				else:
+
+					print rate,"|",
+	if each!=0:	
+		print ""
+	present = past
+	next = t1
+
+if int(command_line[3])== -1:
+	each = 0
+	present=[]
+	while True:
+		#print "a"
+		
+		t1 = (time.time())
+		zaahid()
+		t2 = time.time()
+		each = each+1
+		time.sleep(abs(each_time-t2+t1))
+
+		
+else:
+	present=[]
+	for each in range(0,int(command_line[3])+1):
+		t1 = (time.time())
+		zaahid()
+		t2 = time.time()
+		time.sleep(abs(each_time-t2+t1))
+
